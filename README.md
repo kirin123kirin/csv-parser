@@ -1,8 +1,52 @@
 # CSV Parser
 
-Fast, header-only, C++11 CSV parser.
+Fast, header-only, C++14 CSV parser.
 
-## Usage
+## Custom Usage
+Creating 2D vectors from CSV data
+Several methods are provided.
+
+using namespace std;
+
+## Pattern1. From char, wchar_t pointer.
+```cpp
+const char* data = "\"a\"\t\"あ\tい\"\t\"b\"\t\"c\"\r\n\"e\"\t\"f\"\t\"g\"\r\n";
+const wchar_t* wdata = L"\"a\"\t\"あ\tい\"\t\"b\"\t\"c\"\r\n\"e\"\t\"f\"\t\"g\"\r\n";
+vector<vector<string>> rows = csv::CsvVec(data, '\t');
+vector<vector<wstring>> rows = csv::CsvVec(wdata, L'\t');
+```
+
+## Pattern2. From std::string, std::wstring.
+```cpp
+string data = "\"a\"\t\"あ\tい\"\t\"b\"\t\"c\"\r\n\"e\"\t\"f\"\t\"g\"\r\n";
+wstring wdata = L"\"a\"\t\"あ\tい\"\t\"b\"\t\"c\"\r\n\"e\"\t\"f\"\t\"g\"\r\n";
+vector<vector<string>> rows = csv::CsvVec(data, '\t');
+vector<vector<wstring>> rows = csv::CsvVec(wdata, L'\t');
+```
+
+## Pattern3. From Any Stream Object.
+```cpp
+ifstream fstream("hoge.csv");
+vector<vector<string>> rows = csv::CsvVec(fstream, '\t');
+wifstream wfstream("hoge.csv");
+vector<vector<wstring>> rows = csv::CsvVec(wfstream, L'\t');
+```
+
+## Pattern4. From OS File Path.
+```cpp
+vector<vector<string>> rows = csv::CsvfileVec("hoge.csv", '\t');
+vector<vector<wstring>> rows = csv::CsvfileVec("hoge.csv", L'\t');
+```
+
+## Pattern5. From Std input.
+```cpp
+vector<vector<string>> csv::CsvstdinVec<char>('\t');
+vector<vector<wstring>> csv::CsvstdinVec<wchar_t>(L'\t');
+```
+
+## Below Original ReadMe
+
+---
 
 #### Configuration
 
