@@ -81,12 +81,8 @@ struct Field {
 };
 
 // Reads and parses lines from a csv file
-template <typename CharT>
+template <typename CharT, typename Stream = std::basic_istream<CharT> >
 class CsvParser {
-   public:
-    using Stream = std::basic_istream<CharT>;
-    using ROWS = std::vector<std::vector<std::basic_string<CharT>>>;
-
    private:
     // CSV state for state machine
     enum class State { START_OF_FIELD, IN_FIELD, IN_QUOTED_FIELD, IN_ESCAPED_QUOTE, END_OF_ROW, EMPTY };
@@ -399,16 +395,16 @@ class CsvParser {
     iterator end() { return iterator(this, true); };
 };
 
-// template <typename Stream, typename CharT = typename Stream::_Mysb::char_type>
 template <typename CharT>
-std::vector<std::vector<std::basic_string<CharT>>> CsvVec(std::basic_istream<CharT>& stream,
-                                                          CharT delimiter = TYPED_LITERAL(CharT, ','),
-                                                          CharT quote = TYPED_LITERAL(CharT, '"')) {
+std::vector<typename csv::CsvParser<CharT>::iterator::value_type> CsvVec(std::basic_istream<CharT>& stream,
+                                                                CharT delimiter = TYPED_LITERAL(CharT, ','),
+                                                                CharT quote = TYPED_LITERAL(CharT, '"')) {
     csv::CsvParser<CharT> parser(stream);
     parser.delimiter(delimiter);
     parser.quote(quote);
+    
+    std::vector<csv::CsvParser<CharT>::iterator::value_type> ret{};
 
-    std::vector<std::vector<std::basic_string<CharT>>> ret{};
     for(auto&& row : parser) {
         ret.emplace_back(row);
     }
@@ -416,7 +412,7 @@ std::vector<std::vector<std::basic_string<CharT>>> CsvVec(std::basic_istream<Cha
 }
 
 template <typename CharT>
-std::vector<std::vector<std::basic_string<CharT>>> CsvVec(const CharT* buf,
+std::vector<typename csv::CsvParser<CharT>::iterator::value_type> CsvVec(const CharT* buf,
                                                           CharT delimiter = TYPED_LITERAL(CharT, ','),
                                                           CharT quote = TYPED_LITERAL(CharT, '"')) {
     std::basic_istringstream<CharT> stream(buf);
@@ -424,15 +420,31 @@ std::vector<std::vector<std::basic_string<CharT>>> CsvVec(const CharT* buf,
 }
 
 template <typename CharT>
-std::vector<std::vector<std::basic_string<CharT>>> CsvVec(const std::basic_string<CharT>& str,
+std::vector<typename csv::CsvParser<CharT>::iterator::value_type> CsvVec(const std::basic_string<CharT>& str,
                                                           CharT delimiter = TYPED_LITERAL(CharT, ','),
                                                           CharT quote = TYPED_LITERAL(CharT, '"')) {
     std::basic_istringstream<CharT> stream(str);
     return CsvVec<CharT>(stream, delimiter, quote);
 }
 
-std::vector<std::vector<std::string>> CsvstdinVec(char delimiter = ',',
-                                                  char quote = '"'
+template <typename CharT, typename U>
+std::vector<typename csv::CsvParser<CharT>::iterator::value_type> CsvfileVec(U filename,
+                                                              CharT delimiter = TYPED_LITERAL(CharT, ','),
+                                                              CharT quote = TYPED_LITERAL(CharT, '"'),
+                                                              char* codepage = "Japanese_Japan.65001") {
+    std::ios_base::sync_with_stdio(false);
+    std::locale default_loc(codepage);
+    std::locale::global(default_loc);
+    std::locale ctype_default(std::locale::classic(), default_loc, std::locale::ctype);
+
+    std::basic_ifstream<CharT> stream(filename);
+    if(!stream.good())
+        throw std::runtime_error("File Not Found.");
+    return CsvVec<CharT>(stream, delimiter, quote);
+}
+
+std::vector<typename csv::CsvParser<char>::iterator::value_type> CsvstdinVec(char delimiter = ',',
+                                                  char quote = '"',
 #if _WIN32
                                                   char* codepage = "Japanese_Japan.932") {
 #else
@@ -441,7 +453,7 @@ std::vector<std::vector<std::string>> CsvstdinVec(char delimiter = ',',
     return CsvVec<char>(std::cin, delimiter, quote);
 }
 
-std::vector<std::vector<std::wstring>> CsvstdinVec(wchar_t delimiter = L',',
+std::vector<typename csv::CsvParser<wchar_t>::iterator::value_type> CsvstdinVec(wchar_t delimiter = L',',
                                                    wchar_t quote = L'"',
 #if _WIN32
                                                    char* codepage = "Japanese_Japan.932") {
@@ -456,22 +468,6 @@ std::vector<std::vector<std::wstring>> CsvstdinVec(wchar_t delimiter = L',',
     std::wcin.imbue(ctype_default);
 
     return CsvVec<wchar_t>(std::wcin, delimiter, quote);
-}
-
-template <typename CharT, typename U>
-std::vector<std::vector<std::basic_string<CharT>>> CsvfileVec(U filename,
-                                                              CharT delimiter = TYPED_LITERAL(CharT, ','),
-                                                              CharT quote = TYPED_LITERAL(CharT, '"'),
-                                                              char* codepage = "Japanese_Japan.65001") {
-    std::ios_base::sync_with_stdio(false);
-    std::locale default_loc(codepage);
-    std::locale::global(default_loc);
-    std::locale ctype_default(std::locale::classic(), default_loc, std::locale::ctype);
-
-    std::basic_ifstream<CharT> stream(filename);
-    if(!stream.good())
-        throw std::runtime_error("File Not Found.");
-    return CsvVec<CharT>(stream, delimiter, quote);
 }
 
 }  // namespace csv
