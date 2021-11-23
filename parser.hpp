@@ -364,7 +364,7 @@ class CsvParser {
         int m_current_row = -1;
 
         constexpr void next() {
-            value_type::size_type num_fields = 0;
+            typename value_type::size_type num_fields = 0;
             for(;;) {
                 auto field = m_parser->next_field();
                 switch(field.type) {
@@ -424,7 +424,7 @@ constexpr csv::CsvParser<CharT> CsvIter(const std::basic_string<CharT>& str,
 }
 
 template <typename CharT, typename U>
-constexpr csv::CsvParser<CharT> CsvfileIter(U filename,
+csv::CsvParser<CharT> CsvfileIter(U filename,
                                             const CharT delimiter = TYPED_LITERAL(CharT, ','),
                                             const CharT quote = TYPED_LITERAL(CharT, '"'),
                                             const char* codepage = "Japanese_Japan.65001") {
@@ -496,7 +496,7 @@ constexpr std::vector<typename csv::CsvParser<CharT>::iterator::value_type> CsvV
     std::basic_istream<CharT>& stream,
     const CharT delimiter = TYPED_LITERAL(CharT, ','),
     const CharT quote = TYPED_LITERAL(CharT, '"')) {
-    std::vector<csv::CsvParser<CharT>::iterator::value_type> ret{};
+    std::vector<typename csv::CsvParser<CharT>::iterator::value_type> ret{};
 
     for(auto&& row : csv::CsvIter<CharT>(stream, delimiter, quote)) {
         ret.emplace_back(row);
